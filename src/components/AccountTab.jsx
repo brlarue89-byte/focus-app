@@ -5,7 +5,7 @@ import ShareableCard from './ShareableCard'
 const PRICE = 4.99
 
 export default function AccountTab() {
-  const { profile, signOut, daysLeft, isPro, startCheckout, cancelSubscription, updateProfile, showBanner, registerPush, unregisterPush, isPushEnabled } = useApp()
+  const { profile, signOut, deleteAccount, daysLeft, isPro, startCheckout, cancelSubscription, updateProfile, showBanner, registerPush, unregisterPush, isPushEnabled } = useApp()
   const [cancelling, setCancelling] = useState(false)
   const [showShare, setShowShare] = useState(false)
   const [subscribing, setSubscribing] = useState(false)
@@ -246,6 +246,10 @@ export default function AccountTab() {
         fontFamily: 'DM Sans, sans-serif',
       }}>📤 Share my progress card</button>
       <button className="btn-danger" onClick={signOut}>Sign out</button>
+      <button className="btn-danger" onClick={async () => {
+        if (!window.confirm('Delete your account? This permanently removes all your data and cannot be undone.')) return
+        await deleteAccount()
+      }} style={{ marginTop: 8, background: '#fff', color: '#c0392b', border: '1px solid #c0392b' }}>Delete account</button>
     </>
   )
 }

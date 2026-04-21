@@ -175,6 +175,18 @@ export function AppProvider({ children }) {
     await supabase.auth.signOut()
   }
 
+  async function deleteAccount() {
+    const uid = profile?.id
+    if (!uid) return
+    await supabase.from('tasks').delete().eq('user_id', uid)
+    await supabase.from('progress_history').delete().eq('user_id', uid)
+    await supabase.from('profiles').delete().eq('id', uid)
+    await supabase.from('push_subscriptions').delete().eq('user_id', uid)
+    await supabase.from('wins').delete().eq('user_id', uid)
+    await supabase.from('task_templates').delete().eq('user_id', uid)
+    await supabase.auth.signOut()
+  }
+
   function daysLeft() {
     if (!profile?.trial_start) return TRIAL_DAYS
     const start = new Date(profile.trial_start).getTime()
@@ -777,7 +789,7 @@ export function AppProvider({ children }) {
 
   const value = {
     session, profile, authLoading,
-    signIn, signUp, signOut, updateProfile,
+    signIn, signUp, signOut, deleteAccount, updateProfile,
     daysLeft, isPro, isExpired,
     tasks, tasksLoading,
     selectedDate, setSelectedDate,
