@@ -59,9 +59,11 @@ export default function App() {
         {!pro && left > 0 && (
           <div className="trial-bar">
             <span>{left} day{left !== 1 ? 's' : ''} left in your trial</span>
-            <button className="trial-upgrade" onClick={startCheckout}>
-              Upgrade $4.99/mo →
-            </button>
+            {!window.Capacitor && !window.location.protocol.startsWith('capacitor') && (
+              <button className="trial-upgrade" onClick={startCheckout}>
+                Upgrade $4.99/mo →
+              </button>
+            )}
           </div>
         )}
 
