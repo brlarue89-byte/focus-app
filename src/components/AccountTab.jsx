@@ -40,7 +40,6 @@ export default function AccountTab() {
     setPushLoading(false)
   }
 
-  const isNativeApp = !!window.Capacitor || window.navigator.userAgent.includes('Capacitor') || window.location.protocol === 'capacitor:'
   const pro = isPro()
   const left = daysLeft()
   const theme = profile?.theme || 'light'
@@ -237,8 +236,7 @@ export default function AccountTab() {
         ))}
       </div>
 
-      {!pro && !isNativeApp && <button className="btn-primary" onClick={handleSubscribe} disabled={subscribing} style={{ marginBottom: 12 }}>{subscribing ? 'Redirecting…' : `Upgrade to Pro — $${PRICE}/mo`}</button>}
-      {!pro && isNativeApp && <div style={{ background: 'var(--raised)', borderRadius: 10, padding: '12px 16px', fontSize: 13, color: 'var(--muted)', marginBottom: 12, textAlign: 'center' }}>Visit <b>focus-app-zeta-two.vercel.app</b> in your browser to subscribe to Pro.</div>}
+      {!pro && <button className="btn-primary" onClick={handleSubscribe} disabled={subscribing} style={{ marginBottom: 12 }}>{subscribing ? 'Opening…' : `Upgrade to Pro — $${PRICE}/mo`}</button>}
       {pro && <button className="btn-danger" onClick={handleCancel} disabled={cancelling}>{cancelling ? 'Cancelling…' : 'Cancel subscription'}</button>}
       {showShare && <ShareableCard onClose={() => setShowShare(false)} />}
       <button onClick={() => setShowShare(true)} style={{

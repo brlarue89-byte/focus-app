@@ -766,7 +766,12 @@ export function AppProvider({ children }) {
   async function startCheckout() {
     const { data, error } = await supabase.functions.invoke('create-checkout', { body: { email: session.user.email, userId: session.user.id } })
     if (error) throw error
-    window.location.href = data.url
+    if (window.Capacitor) {
+      const { Browser } = await import('@capacitor/browser')
+      await Browser.open({ url: data.url })
+    } else {
+      window.location.href = data.url
+    }
   }
 
   async function cancelSubscription() {
