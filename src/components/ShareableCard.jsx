@@ -2,7 +2,7 @@ import { useRef, useState } from 'react'
 import { useApp, getXPRank } from '../context/AppContext'
 
 export default function ShareableCard({ onClose }) {
-  const { profile } = useApp()
+  const { profile, nativeShare } = useApp()
   const cardRef = useRef(null)
   const [copying, setCopying] = useState(false)
 
@@ -13,22 +13,10 @@ export default function ShareableCard({ onClose }) {
 
   async function handleShare() {
     setCopying(true)
+    const text = `🎯 Focus Daily Planner\n\n👤 ${name}\n🔥 ${streak} day streak\n⚡ ${xp.toLocaleString()} XP${rank ? `\n${rank.label} rank` : ''}\n\nfocus-app-zeta-two.vercel.app`
     try {
-      // Use html2canvas if available, otherwise fall back to clipboard text
-      if (window.html2canvas) {
-        const canvas = await window.html2canvas(cardRef.current, { scale: 2, useCORS: true })
-        canvas.toBlob(async blob => {
-          try {
-            await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })])
-            alert('Card copied to clipboard! Paste it anywhere.')
-          } catch {
-            const url = canvas.toDataURL()
-            const a = document.createElement('a'); a.href = url; a.download = 'focus-progress.png'; a.click()
-          }
-        })
-      } else {
-        // Text fallback
-        const text = `🎯 Focus App Progress\n\n👤 ${name}\n🔥 ${streak} day streak\n⚡ ${xp.toLocaleString()} XP${rank ? `\n${rank.label} rank` : ''}\n\nfocus-app-zeta-two.vercel.app`
+      const shared = await nativeShare('My Focus Progress', text)
+      if (!shared) {
         await navigator.clipboard.writeText(text)
         alert('Progress copied to clipboard!')
       }

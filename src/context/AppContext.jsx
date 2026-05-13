@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, useRef } from 'react'
+import confetti from 'canvas-confetti'
 import { supabase } from '../lib/supabase'
 
 const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY
@@ -11,6 +12,66 @@ function urlBase64ToUint8(base64String) {
 }
 
 const AppContext = createContext(null)
+
+const QUOTES = [
+  "Small steps every day lead to big results.",
+  "You don't have to be perfect, just consistent.",
+  "Progress, not perfection.",
+  "One task at a time. You've got this.",
+  "Show up today. Future you will thank you.",
+  "Discipline is choosing what you want most over what you want now.",
+  "The secret to getting ahead is getting started.",
+  "Done is better than perfect.",
+  "Every day is a chance to be better than yesterday.",
+  "Focus on what matters. Let go of the rest.",
+  "Your only competition is who you were yesterday.",
+  "Great things are done by a series of small things brought together.",
+  "Believe you can and you're halfway there.",
+  "Action is the foundational key to all success.",
+  "Start where you are. Use what you have. Do what you can.",
+]
+
+async function scheduleQuoteNotification() {
+  if (!window.Capacitor) return
+  try {
+    const { LocalNotifications } = await import('@capacitor/local-notifications')
+    const { display } = await LocalNotifications.checkPermissions()
+    if (display !== 'granted') {
+      const { display: d } = await LocalNotifications.requestPermissions()
+      if (d !== 'granted') return
+    }
+    const pending = await LocalNotifications.getPending()
+    if (pending.notifications.some(n => n.id === 1001)) return
+    const quote = QUOTES[Math.floor(Math.random() * QUOTES.length)]
+    const now = new Date()
+    const fire = new Date(now)
+    fire.setHours(8, 0, 0, 0)
+    if (fire <= now) fire.setDate(fire.getDate() + 1)
+    await LocalNotifications.schedule({ notifications: [{
+      id: 1001, title: 'Good morning! 🌿', body: quote,
+      schedule: { at: fire, repeats: true, every: 'day' },
+      sound: null, smallIcon: 'ic_stat_icon_config_sample',
+    }]})
+  } catch {}
+}
+
+async function haptic(style = 'medium') {
+  if (!window.Capacitor) return
+  try {
+    const { Haptics, ImpactStyle } = await import('@capacitor/haptics')
+    const map = { light: ImpactStyle.Light, medium: ImpactStyle.Medium, heavy: ImpactStyle.Heavy }
+    await Haptics.impact({ style: map[style] || ImpactStyle.Medium })
+  } catch {}
+}
+
+async function nativeShare(title, text) {
+  if (!window.Capacitor) return false
+  try {
+    const { Share } = await import('@capacitor/share')
+    await Share.share({ title, text, dialogTitle: title })
+    return true
+  } catch { return false }
+}
 
 const TASK_MIN = 5
 const TASK_MAX = 20
@@ -69,6 +130,7 @@ export function AppProvider({ children }) {
   // ─── Auth ─────────────────────────────────────────────────────────────────
 
   useEffect(() => {
+    scheduleQuoteNotification()
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
       if (session) fetchProfile(session.user.id)
@@ -288,6 +350,7 @@ export function AppProvider({ children }) {
     await supabase.from('profiles').update({ badges }).eq('id', session.user.id)
     const badge = BADGE_DEFS.find(b => b.id === id)
     if (badge) {
+      haptic('heavy')
       showBanner(`🏅 Badge unlocked: ${badge.name}!`)
       const displayName = profile?.name || profile?.email?.split('@')[0] || 'Someone'
       postWin('badge', `${displayName} unlocked the ${badge.name} badge`, badge.icon)
@@ -554,9 +617,12 @@ export function AppProvider({ children }) {
     setTasks(newTasks)
     await supabase.from('tasks').update({ done }).eq('id', id)
     if (done) {
+      haptic('medium')
       await awardXP(10)
       const allDone = newTasks.every(t => t.done)
       if (allDone && newTasks.length > 0) {
+        haptic('heavy')
+        confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 }, colors: ['#1D9E75','#4ecca3','#FFD700','#FF6B6B','#fff'] })
         await awardXP(50)
         awardBadge('perfect_day')
         showBanner('🎉 Perfect day! +50 XP bonus')
@@ -808,6 +874,7 @@ export function AppProvider({ children }) {
     startCheckout, cancelSubscription,
     showDayRating, setShowDayRating, saveDayRating,
     postWin, fetchTemplates, saveTemplate, deleteTemplate, applyTemplate,
+    nativeShare,
     banner, showBanner,
     chatHistory, setChatHistory,
     TASK_MIN, TASK_MAX, COLORS, BADGE_DEFS,

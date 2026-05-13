@@ -24,6 +24,27 @@ export default function TasksTab({ onNavigate }) {
   const [showTimer, setShowTimer] = useState(false)
   const [timerTask, setTimerTask] = useState(null)
   const [showTemplates, setShowTemplates] = useState(false)
+  const [listening, setListening] = useState(false)
+  const recognitionRef = useRef(null)
+
+  function startVoice() {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition
+    if (!SR) { showBanner('Voice input not supported on this device.'); return }
+    if (listening) { recognitionRef.current?.stop(); return }
+    const r = new SR()
+    r.lang = 'en-US'
+    r.interimResults = false
+    r.onstart = () => setListening(true)
+    r.onend = () => setListening(false)
+    r.onerror = () => setListening(false)
+    r.onresult = e => {
+      const text = e.results[0][0].transcript
+      setInput(text)
+      inputRef.current?.focus()
+    }
+    recognitionRef.current = r
+    r.start()
+  }
 
   const done = tasks.filter(t => t.done).length
   const total = tasks.length
@@ -179,6 +200,12 @@ export default function TasksTab({ onNavigate }) {
           onChange={e => setInput(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && handleAdd()}
         />
+        <button onClick={startVoice} title="Voice input" style={{
+          background: listening ? '#e74c3c' : 'var(--raised)',
+          border: '0.5px solid var(--border2)', borderRadius: 8,
+          padding: '0 10px', cursor: 'pointer', fontSize: 16,
+          color: listening ? '#fff' : 'var(--ink)', flexShrink: 0,
+        }}>{listening ? '⏹' : '🎤'}</button>
         <button onClick={handleAdd} disabled={total >= TASK_MAX}>Add</button>
       </div>
 
