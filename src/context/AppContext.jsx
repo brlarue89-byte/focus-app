@@ -3,6 +3,7 @@ import confetti from 'canvas-confetti'
 import { supabase } from '../lib/supabase'
 
 const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY
+const RC_IOS_KEY = import.meta.env.VITE_REVENUECAT_IOS_KEY || ''
 
 function urlBase64ToUint8(base64String) {
   const pad = '='.repeat((4 - base64String.length % 4) % 4)
@@ -449,6 +450,7 @@ export function AppProvider({ children }) {
     if (!session) return
     ;(async () => {
       const freshProfile = await fetchProfile(session.user.id)
+      await syncRevenueCat(session.user.id)
       await cleanupPastTasks(freshProfile)
       await loadTasks(selectedDate)
       await checkShouldShowRating()
@@ -827,25 +829,58 @@ export function AppProvider({ children }) {
     await supabase.from('friends').delete().eq('user_id', session.user.id).eq('friend_id', friendId)
   }
 
+  // ─── RevenueCat (iOS IAP) ─────────────────────────────────────────────────
+
+  async function syncRevenueCat(userId) {
+    if (!window.Capacitor || !RC_IOS_KEY) return
+    try {
+      const { Purchases } = await import('@revenuecat/purchases-capacitor')
+      await Purchases.configure({ apiKey: RC_IOS_KEY, appUserID: userId })
+      const { customerInfo } = await Purchases.getCustomerInfo()
+      const active = !!customerInfo.entitlements.active['pro']
+      await supabase.from('profiles').update({ subscribed: active }).eq('id', userId)
+    } catch (e) {
+      console.error('RevenueCat sync failed:', e)
+    }
+  }
+
   // ─── Subscription ─────────────────────────────────────────────────────────
 
   async function startCheckout() {
-    const { data, error } = await supabase.functions.invoke('create-checkout', { body: { email: session.user.email, userId: session.user.id } })
-    if (error) throw error
-    if (window.Capacitor) {
-      const { Browser } = await import('@capacitor/browser')
-      await Browser.open({ url: data.url })
+    if (window.Capacitor && RC_IOS_KEY) {
+      try {
+        const { Purchases } = await import('@revenuecat/purchases-capacitor')
+        const { offerings } = await Purchases.getOfferings()
+        const pkg = offerings.current?.monthly
+        if (!pkg) { showBanner('Subscription not available right now.'); return }
+        const { customerInfo } = await Purchases.purchasePackage({ aPackage: pkg })
+        if (customerInfo.entitlements.active['pro']) {
+          await supabase.from('profiles').update({ subscribed: true }).eq('id', session.user.id)
+          await fetchProfile(session.user.id)
+          showBanner('Welcome to Pro! 🎉')
+        }
+      } catch (e) {
+        if (e?.code !== 'PURCHASE_CANCELLED') showBanner('Purchase failed. Please try again.')
+      }
     } else {
+      const { data, error } = await supabase.functions.invoke('create-checkout', { body: { email: session.user.email, userId: session.user.id } })
+      if (error) throw error
       window.location.href = data.url
     }
   }
 
   async function cancelSubscription() {
-    const { error } = await supabase.functions.invoke('cancel-subscription', { body: { userId: session.user.id } })
-    if (error) throw error
-    await supabase.from('profiles').update({ subscribed: false, stripe_subscription_id: null }).eq('id', session.user.id)
-    await fetchProfile(session.user.id)
-    showBanner('Subscription cancelled.')
+    if (window.Capacitor) {
+      const { Browser } = await import('@capacitor/browser')
+      await Browser.open({ url: 'https://apps.apple.com/account/subscriptions' })
+      showBanner('Manage your subscription in iOS Settings → Apple ID → Subscriptions.')
+    } else {
+      const { error } = await supabase.functions.invoke('cancel-subscription', { body: { userId: session.user.id } })
+      if (error) throw error
+      await supabase.from('profiles').update({ subscribed: false, stripe_subscription_id: null }).eq('id', session.user.id)
+      await fetchProfile(session.user.id)
+      showBanner('Subscription cancelled.')
+    }
   }
 
   // ─── Banner ───────────────────────────────────────────────────────────────
