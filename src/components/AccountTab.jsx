@@ -236,7 +236,20 @@ export default function AccountTab() {
         ))}
       </div>
 
-      {!pro && <button className="btn-primary" onClick={handleSubscribe} disabled={subscribing} style={{ marginBottom: 12 }}>{subscribing ? 'Opening…' : `Upgrade to Pro — $${PRICE}/mo`}</button>}
+      {!pro && (
+        <div style={{ marginBottom: 12 }}>
+          <div style={{ background: 'var(--raised)', borderRadius: 12, padding: '14px 16px', marginBottom: 10, border: '0.5px solid var(--border2)' }}>
+            <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--ink)', marginBottom: 4 }}>Focus Pro</div>
+            <div style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 2 }}>Auto-renewable subscription · 1 month</div>
+            <div style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 2 }}>${PRICE} / month · Cancel anytime in iOS Settings</div>
+            <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 8, display: 'flex', gap: 12 }}>
+              <a href="https://focus-app-zeta-two.vercel.app/privacy.html" target="_blank" rel="noreferrer" style={{ color: 'var(--green)', textDecoration: 'none' }}>Privacy Policy</a>
+              <a href="https://www.apple.com/legal/internet-services/itunes/dev/stdeula/" target="_blank" rel="noreferrer" style={{ color: 'var(--green)', textDecoration: 'none' }}>Terms of Use</a>
+            </div>
+          </div>
+          <button className="btn-primary" onClick={handleSubscribe} disabled={subscribing}>{subscribing ? 'Opening…' : `Upgrade to Pro — $${PRICE}/mo`}</button>
+        </div>
+      )}
       {pro && <button className="btn-danger" onClick={handleCancel} disabled={cancelling}>{cancelling ? 'Cancelling…' : 'Cancel subscription'}</button>}
       {showShare && <ShareableCard onClose={() => setShowShare(false)} />}
       <button onClick={() => setShowShare(true)} style={{

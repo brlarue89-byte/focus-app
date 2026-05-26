@@ -3,7 +3,7 @@ import confetti from 'canvas-confetti'
 import { supabase } from '../lib/supabase'
 
 const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY
-const RC_IOS_KEY = import.meta.env.VITE_REVENUECAT_IOS_KEY || ''
+const RC_IOS_KEY = import.meta.env.VITE_REVENUECAT_IOS_KEY || 'appl_mfAvlFSkQwKAEyVhrRIsRVEXgJZ'
 
 function urlBase64ToUint8(base64String) {
   const pad = '='.repeat((4 - base64String.length % 4) % 4)
