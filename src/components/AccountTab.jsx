@@ -4,6 +4,15 @@ import ShareableCard from './ShareableCard'
 
 const PRICE = 4.99
 
+async function openLink(url) {
+  if (window.Capacitor) {
+    const { Browser } = await import('@capacitor/browser')
+    await Browser.open({ url })
+  } else {
+    window.open(url, '_blank')
+  }
+}
+
 export default function AccountTab() {
   const { profile, signOut, deleteAccount, daysLeft, isPro, startCheckout, cancelSubscription, updateProfile, showBanner, registerPush, unregisterPush, isPushEnabled } = useApp()
   const [cancelling, setCancelling] = useState(false)
@@ -243,8 +252,8 @@ export default function AccountTab() {
             <div style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 2 }}>Auto-renewable subscription · 1 month</div>
             <div style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 2 }}>${PRICE} / month · Cancel anytime in iOS Settings</div>
             <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 8, display: 'flex', gap: 12 }}>
-              <a href="https://focus-app-zeta-two.vercel.app/privacy.html" target="_blank" rel="noreferrer" style={{ color: 'var(--green)', textDecoration: 'none' }}>Privacy Policy</a>
-              <a href="https://www.apple.com/legal/internet-services/itunes/dev/stdeula/" target="_blank" rel="noreferrer" style={{ color: 'var(--green)', textDecoration: 'none' }}>Terms of Use</a>
+              <span onClick={() => openLink('https://focus-app-zeta-two.vercel.app/privacy.html')} style={{ color: 'var(--green)', textDecoration: 'underline', cursor: 'pointer' }}>Privacy Policy</span>
+              <span onClick={() => openLink('https://www.apple.com/legal/internet-services/itunes/dev/stdeula/')} style={{ color: 'var(--green)', textDecoration: 'underline', cursor: 'pointer' }}>Terms of Use</span>
             </div>
           </div>
           <button className="btn-primary" onClick={handleSubscribe} disabled={subscribing}>{subscribing ? 'Opening…' : `Upgrade to Pro — $${PRICE}/mo`}</button>
