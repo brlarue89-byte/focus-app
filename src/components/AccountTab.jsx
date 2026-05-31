@@ -62,7 +62,7 @@ export default function AccountTab() {
 
   async function handleSubscribe() {
     setSubscribing(true)
-    try { await startCheckout() } catch { setSubscribing(false) }
+    try { await startCheckout() } finally { setSubscribing(false) }
   }
 
   async function handleCancel() {
