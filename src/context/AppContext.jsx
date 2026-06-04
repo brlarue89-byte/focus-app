@@ -837,7 +837,7 @@ export function AppProvider({ children }) {
       const { Purchases } = await import('@revenuecat/purchases-capacitor')
       await Purchases.configure({ apiKey: RC_IOS_KEY, appUserID: userId })
       const { customerInfo } = await Purchases.getCustomerInfo()
-      const active = !!customerInfo.entitlements.active['pro']
+      const active = !!customerInfo.entitlements.active['focus daily planner Pro']
       await supabase.from('profiles').update({ subscribed: active }).eq('id', userId)
     } catch (e) {
       console.error('RevenueCat sync failed:', e)
@@ -850,11 +850,13 @@ export function AppProvider({ children }) {
     if (window.Capacitor && RC_IOS_KEY) {
       try {
         const { Purchases } = await import('@revenuecat/purchases-capacitor')
+        await Purchases.configure({ apiKey: RC_IOS_KEY, appUserID: session.user.id })
         const { offerings } = await Purchases.getOfferings()
         const pkg = offerings.current?.monthly
+          || offerings.current?.availablePackages?.[0]
         if (!pkg) { showBanner('Subscription not available right now.'); return }
         const { customerInfo } = await Purchases.purchasePackage({ aPackage: pkg })
-        if (customerInfo.entitlements.active['pro']) {
+        if (customerInfo.entitlements.active['focus daily planner Pro']) {
           await supabase.from('profiles').update({ subscribed: true }).eq('id', session.user.id)
           await fetchProfile(session.user.id)
           showBanner('Welcome to Pro! 🎉')
