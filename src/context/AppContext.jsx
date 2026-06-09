@@ -851,9 +851,10 @@ export function AppProvider({ children }) {
       try {
         const { Purchases } = await import('@revenuecat/purchases-capacitor')
         await Purchases.configure({ apiKey: RC_IOS_KEY, appUserID: session.user.id })
-        const { offerings } = await Purchases.getOfferings()
-        const pkg = offerings.current?.monthly
-          || offerings.current?.availablePackages?.[0]
+        const offeringsResult = await Purchases.getOfferings()
+        const offerings = offeringsResult?.offerings ?? offeringsResult
+        const pkg = offerings?.current?.monthly
+          || offerings?.current?.availablePackages?.[0]
         if (!pkg) { showBanner('Subscription not available right now.'); return }
         const { customerInfo } = await Purchases.purchasePackage({ aPackage: pkg })
         if (customerInfo.entitlements.active['focus daily planner Pro']) {
