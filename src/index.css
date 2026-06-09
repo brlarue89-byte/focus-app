@@ -67,14 +67,18 @@ h1 {
   display: flex;
   border: 0.5px solid var(--border);
   border-radius: var(--radius-lg);
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
   margin-bottom: 1.25rem;
   background: var(--surface);
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
 }
+.tabs::-webkit-scrollbar { display: none; }
 
 .tab {
-  flex: 1;
-  padding: 9px 0;
+  flex: 0 0 auto;
+  padding: 9px 14px;
   font-size: 12px;
   font-weight: 500;
   background: transparent;
@@ -83,6 +87,7 @@ h1 {
   color: var(--muted);
   font-family: 'DM Sans', sans-serif;
   transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
 }
 
 .tab.active { background: var(--green); color: #fff; }

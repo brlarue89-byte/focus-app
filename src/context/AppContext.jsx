@@ -862,7 +862,7 @@ export function AppProvider({ children }) {
           showBanner('Welcome to Pro! 🎉')
         }
       } catch (e) {
-        if (e?.code !== 'PURCHASE_CANCELLED') showBanner('Purchase failed. Please try again.')
+        if (e?.code !== 'PURCHASE_CANCELLED') showBanner(`Purchase failed: ${e?.code || e?.message || 'unknown error'}`)
       }
     } else {
       const { data, error } = await supabase.functions.invoke('create-checkout', { body: { email: session.user.email, userId: session.user.id } })
