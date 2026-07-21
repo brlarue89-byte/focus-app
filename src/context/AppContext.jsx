@@ -456,7 +456,7 @@ export function AppProvider({ children }) {
       await checkShouldShowRating()
       arm9pmTimer()
     })()
-  }, [session])
+  }, [session?.user?.id])
 
   async function cleanupPastTasks(freshProfile) {
     const today = todayStr()
